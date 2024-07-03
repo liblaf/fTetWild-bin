@@ -6,20 +6,48 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - run: mkdir build
+      - name: Build
+        run: bash "${{ github.workspace }}/build.sh"
         working-directory: fTetWild
-      - run: cmake ..
-        working-directory: fTetWild/build
-      - run: make
+      - name: Test
+        run: ./fTetWild-* --help
         working-directory: fTetWild/build
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build
-          path: fTetWild/build
+          name: build-${{ runner.arch }}-${{ runner.os }}
+          path: fTetWild/build/fTetWild-*
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+  release:
+    name: Release
+    permissions:
+      contents: write
+    needs:
+      - build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          merge-multiple: true
+      - name: Create GitHub Release
+        uses: liblaf/repo/.github/actions/release@main
+        with:
+          tag: dev
+          files: fTetWild-*
