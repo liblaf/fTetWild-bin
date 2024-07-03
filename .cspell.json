@@ -1,0 +1,10 @@
+{
+  "words": ["liblaf"],
+  "ignorePaths": [
+    "**/*-lock.*",
+    "**/*.lock*",
+    "**/.cspell.json",
+    "**/fTetWild"
+  ],
+  "allowCompoundWords": true
+}
