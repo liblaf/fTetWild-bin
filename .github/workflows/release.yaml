@@ -25,7 +25,7 @@ jobs:
         name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: wildmeshing/fTetWild
+          repository: chrismile/fTetWild
           ref: ${{ inputs.ref }}
       - name: Create Build Directory
         run: mkdir --parents --verbose "./build/"
