@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * *" # Every day at midnight
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: ref
+        required: false
+        type: string
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install Tools
+        uses: liblaf/actions/install@main
+        with:
+          brew: coreutils make
+          choco: gnuwin32-coreutils.install make
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: wildmeshing/fTetWild
+          ref: ${{ inputs.ref }}
+      - name: Create Build Directory
+        run: mkdir --parents --verbose "./build/"
+      - name: Configure
+        run: cmake .. -D CMAKE_BUILD_TYPE=Release
+        working-directory: ./build/
+      - name: Build
+        run: make --jobs
+        working-directory: ./build/
+      - name: Rename
+        run: |-
+          install -D --mode="u=rwx,go=rx" --no-target-directory --verbose \
+            "./dist/fTetWild-${{ runner.arch }}-${{ runner.os }}" \
+            "./build/FloatTetwild_bin"
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ runner.arch }}-${{ runner.os }}
+          path: ./dist/
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+      fail-fast: false
+
+  test:
+    name: Test
+    needs:
+      - build
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install Tools
+        uses: liblaf/actions/install@main
+        with:
+          brew: coreutils make
+          choco: gnuwin32-coreutils.install make
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ runner.arch }}-${{ runner.os }}
+          path: ./dist/
+      - name: Prepare
+        run: |-
+          mv ./dist/fTetWild-${{ runner.arch }}-${{ runner.os }} ./dist/fTetWild
+          chmod +x ./dist/fTetWild
+          mkdir --parents --verbose "./inputs/" "./outputs/"
+      - name: Download Inputs
+        run: |-
+          wget --output-document="./bunny.ply" "https://raw.githubusercontent.com/pyvista/vtk-data/refs/heads/master/Data/bunny.ply"
+        working-directory: ./inputs/
+      - name: Help
+        run: ./dist/fTetWild --help
+      - name: Bunny
+        run: |-
+          ./dist/fTetWild --input "./inputs/bunny.ply" --output "./outputs/bunny.msh"
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-${{ runner.arch }}-${{ runner.os }}
+          path: ./outputs/
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+      fail-fast: false
+
+  release:
+    name: Release
+    needs:
+      - build
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./dist/
+          pattern: dist-*
+          merge-multiple: true
+      - name: Release
+        uses: liblaf/actions/release@main
+        with:
+          clobber: true
+          files: ./dist/*
+          tag: dev
