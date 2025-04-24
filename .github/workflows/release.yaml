@@ -3,7 +3,7 @@ name: Release
 on:
   push:
   schedule:
-    - cron: "0 0 * * *" # Every day at midnight
+    - cron: "0 0 * * *"
   workflow_dispatch:
     inputs:
       ref:
@@ -19,12 +19,14 @@ jobs:
       - name: Install Tools
         uses: liblaf/actions/install@main
         with:
-          brew: coreutils make
+          apt: gmp
+          brew: coreutils make gmp
           choco: gnuwin32-coreutils.install make
       - id: checkout
         name: Checkout
         uses: actions/checkout@v4
         with:
+          # TODO: switch back to official repository when <https://github.com/wildmeshing/fTetWild/issues/79> is fixed
           repository: chrismile/fTetWild
           ref: ${{ inputs.ref }}
       - name: Create Build Directory
@@ -37,9 +39,7 @@ jobs:
         working-directory: ./build/
       - name: Rename
         run: |-
-          install -D --mode="u=rwx,go=rx" --no-target-directory --verbose \
-            "./dist/fTetWild-${{ runner.arch }}-${{ runner.os }}" \
-            "./build/FloatTetwild_bin"
+          install -D --mode="u=rwx,go=rx" --verbose "./build/FloatTetwild_bin" "./dist/fTetWild-${{ runner.arch }}-${{ runner.os }}"
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -50,7 +50,8 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          - windows-latest
+          # TODO: fix build on windows
+          # - windows-latest
       fail-fast: false
 
   test:
@@ -62,8 +63,8 @@ jobs:
       - name: Install Tools
         uses: liblaf/actions/install@main
         with:
-          brew: coreutils make
-          choco: gnuwin32-coreutils.install make
+          brew: coreutils
+          choco: gnuwin32-coreutils.install
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -71,8 +72,7 @@ jobs:
           path: ./dist/
       - name: Prepare
         run: |-
-          mv ./dist/fTetWild-${{ runner.arch }}-${{ runner.os }} ./dist/fTetWild
-          chmod +x ./dist/fTetWild
+          install --mode="u=rwx,go=rx" --verbose "./dist/fTetWild-${{ runner.arch }}-${{ runner.os }}" "./dist/fTetWild"
           mkdir --parents --verbose "./inputs/" "./outputs/"
       - name: Download Inputs
         run: |-
@@ -93,7 +93,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
       fail-fast: false
 
   release:
