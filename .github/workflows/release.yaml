@@ -102,6 +102,9 @@ jobs:
       - build
       - test
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-release
+      cancel-in-progress: true
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
