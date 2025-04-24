@@ -19,7 +19,7 @@ jobs:
       - name: Install Tools
         uses: liblaf/actions/install@main
         with:
-          apt: gmp
+          # official `README.md` says `gmp` is a necessary dependency, but it is not
           brew: coreutils make gmp
           choco: gnuwin32-coreutils.install make
       - id: checkout
