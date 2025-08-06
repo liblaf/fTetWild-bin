@@ -70,7 +70,7 @@ jobs:
           brew: coreutils
           choco: gnuwin32-coreutils.install
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: dist-${{ runner.arch }}-${{ runner.os }}
           path: ./dist/
@@ -114,7 +114,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ./dist/
           pattern: dist-*
