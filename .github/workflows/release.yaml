@@ -28,7 +28,7 @@ jobs:
           choco: gnuwin32-coreutils.install make
       - id: checkout
         name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # TODO: switch back to official repository when <https://github.com/wildmeshing/fTetWild/issues/79> is fixed
           repository: chrismile/fTetWild
@@ -79,7 +79,7 @@ jobs:
           install --mode="u=rwx,go=rx" --verbose "./dist/fTetWild-${{ runner.arch }}-${{ runner.os }}" "./dist/fTetWild"
           mkdir --parents --verbose "./outputs/"
       - name: Clone Data
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: wildmeshing/data
           path: ./data/
